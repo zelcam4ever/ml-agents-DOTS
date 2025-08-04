@@ -12,7 +12,7 @@ Please refer to the [ML-Agents github repo] for installation instructions to sta
 Once installed, you substitute the `com.Unity.MLAgents` package in your project with `com.zelcam4.ml-agents` from this repository. You can directly import this package from the Unity package manager.
 
 ## How to use
-![](Documentation~/sample.gif)
+![](Documentation~/basic.gif)
 Please import the BasicSample provided in the package to get started and open the `Sample Sub Scene.scene` sub-scene.
 
 ### Agents:
