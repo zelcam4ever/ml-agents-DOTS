@@ -1,6 +1,9 @@
 name: Check for Missing .meta Files
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   check-meta:
@@ -17,15 +20,16 @@ jobs:
           MISSING_META_FILES=""
 
           # Check for missing .meta files
-          for file in $(git ls-files | grep -v -E '~$|\.meta$|(^\.|\/\.)'); do
+          for file in $(git ls-files | grep -v -E '~|\.meta$|(^\.|\/\.)'); do
             if [ ! -f "$file.meta" ]; then
               echo "ERROR: Missing .meta file for file: $file"
               MISSING_META_FILES="$MISSING_META_FILES\n$file"
             fi
           done
 
-          # check for missing .meta files in directories
-          for dir in $(git ls-files | xargs -n1 dirname | sort -u | grep -v -E '~$|^\.$|(^\.|\/\.)'); do
+          # Check for missing .meta files in directories
+          # Excludes paths containing '~' or starting with '.'
+          for dir in $(git ls-files | xargs -n1 dirname | sort -u | grep -v -E '~|^\.$|(^\.|\/\.)'); do
             if [ ! -f "$dir.meta" ]; then
               echo "ERROR: Missing .meta file for directory: $dir"
               MISSING_META_FILES="$MISSING_META_FILES\n$dir"
