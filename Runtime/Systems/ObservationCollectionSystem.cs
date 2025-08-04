@@ -9,34 +9,6 @@ namespace Zelcam4.MLAgents
     //Partial class defined to allow for generic type arguments in attributes (UpdateAfter)
     [UpdateAfter(typeof(IncrementStepSystem))]
     public partial class ObservationCollectionGroup : ComponentSystemGroup {}
-    
-    [UpdateInGroup(typeof(ObservationCollectionGroup))]
-    public partial class ObservationCollectionSystem<T, TExtractor> : SystemBase
-        where T : unmanaged, IComponentData
-        where TExtractor : struct, IObservationExtractor<T>
-    {
-        private EntityQuery _query;
-
-        protected override void OnCreate()
-        {
-            _query = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<RequestDecisionTag,ObservationValue, ObservationRequest<T>, T>()
-                .Build(this);
-        }
-
-        protected override void OnUpdate()
-        {
-            var job = new GatherJob<T, TExtractor>
-            {
-                FinalObservationBufferHandle = GetBufferTypeHandle<ObservationValue>(false),
-                RequestsHandle = GetBufferTypeHandle<ObservationRequest<T>>(true),
-                SourceComponentHandle = GetComponentTypeHandle<T>(true),
-                Extractor = default
-            };
-            
-            this.Dependency = job.ScheduleParallel(_query, this.Dependency);
-        }
-    }
 
     [BurstCompile]
     public struct GatherJob<T, TExtractor> : IJobChunk
