@@ -1,6 +1,5 @@
 name: Check for Missing .meta Files
 
-# This workflow runs on every push and pull request to any branch
 on: [push, pull_request]
 
 jobs:
@@ -17,16 +16,16 @@ jobs:
           echo "Searching for missing .meta files..."
           MISSING_META_FILES=""
 
-          # Updated the grep pattern to also exclude paths ending in '~'
-          for file in $(git ls-files | grep -v -E '~$|\.meta$|\.signature$|^\.git'); do
+          # Check for missing .meta files
+          for file in $(git ls-files | grep -v -E '~$|\.meta$|(^\.|\/\.)'); do
             if [ ! -f "$file.meta" ]; then
               echo "ERROR: Missing .meta file for file: $file"
               MISSING_META_FILES="$MISSING_META_FILES\n$file"
             fi
           done
 
-          # Gets the unique directory paths from the list of tracked files.
-          for dir in $(git ls-files | xargs -n1 dirname | sort -u | grep -v -E '~$|^\.$'); do
+          # check for missing .meta files in directories
+          for dir in $(git ls-files | xargs -n1 dirname | sort -u | grep -v -E '~$|^\.$|(^\.|\/\.)'); do
             if [ ! -f "$dir.meta" ]; then
               echo "ERROR: Missing .meta file for directory: $dir"
               MISSING_META_FILES="$MISSING_META_FILES\n$dir"
