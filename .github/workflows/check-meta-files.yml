@@ -12,20 +12,29 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Find files with missing .meta files
+      - name: Find items with missing .meta files
         run: |
-          echo "Searching for files missing a .meta file..."
+          echo "Searching for missing .meta files..."
           MISSING_META_FILES=""
-          # Find all files, exclude directories, .git files, .meta files, and .signature files
-          for file in $(git ls-files | grep -v -E '\.meta$|\.signature$|^\.git'); do
+
+          # Updated the grep pattern to also exclude paths ending in '~'
+          for file in $(git ls-files | grep -v -E '~$|\.meta$|\.signature$|^\.git'); do
             if [ ! -f "$file.meta" ]; then
-              echo "ERROR: Missing .meta file for: $file"
+              echo "ERROR: Missing .meta file for file: $file"
               MISSING_META_FILES="$MISSING_META_FILES\n$file"
             fi
           done
 
+          # Gets the unique directory paths from the list of tracked files.
+          for dir in $(git ls-files | xargs -n1 dirname | sort -u | grep -v -E '~$|^\.$'); do
+            if [ ! -f "$dir.meta" ]; then
+              echo "ERROR: Missing .meta file for directory: $dir"
+              MISSING_META_FILES="$MISSING_META_FILES\n$dir"
+            fi
+          done
+
           if [ -n "$MISSING_META_FILES" ]; then
-            echo "::error::Found files with missing .meta files. Please generate them in the Unity Editor before committing."
+            echo "::error::Found files or directories with missing .meta files. Please generate them in the Unity Editor before committing."
             exit 1
           else
             echo "All required .meta files are present. ✅"
