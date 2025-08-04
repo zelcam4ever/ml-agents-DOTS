@@ -1,0 +1,32 @@
+name: Check for Missing .meta Files
+
+# This workflow runs on every push and pull request to any branch
+on: [push, pull_request]
+
+jobs:
+  check-meta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find files with missing .meta files
+        run: |
+          echo "Searching for files missing a .meta file..."
+          MISSING_META_FILES=""
+          # Find all files, exclude directories, .git files, .meta files, and .signature files
+          for file in $(git ls-files | grep -v -E '\.meta$|\.signature$|^\.git'); do
+            if [ ! -f "$file.meta" ]; then
+              echo "ERROR: Missing .meta file for: $file"
+              MISSING_META_FILES="$MISSING_META_FILES\n$file"
+            fi
+          done
+
+          if [ -n "$MISSING_META_FILES" ]; then
+            echo "::error::Found files with missing .meta files. Please generate them in the Unity Editor before committing."
+            exit 1
+          else
+            echo "All required .meta files are present. ✅"
+          fi
