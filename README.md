@@ -12,7 +12,7 @@ Please refer to the [ML-Agents github repo] for installation instructions to sta
 Once installed, you substitute the `com.Unity.MLAgents` package in your project with `com.zelcam4.ml-agents` from this repository. You can directly import this package from the Unity package manager.
 
 ## How to use
-![](\Documentation~\sample.gif)
+![](Documentation~/sample.gif)
 Please import the BasicSample provided in the package to get started and open the `Sample Sub Scene.scene` sub-scene.
 
 ### Agents:
@@ -30,7 +30,7 @@ schedule different Jobs with `GatherJob<T, TExtractor> : IJobChunk` under `[Upda
 > In order to take advantage of generics, it is neccessary to register types at assembly level.
 `[assembly:RegisterGenericComponentType(typeof(ObservationRequest<CustomObservation>))]`
 
-For more information, please refer to the [code summaries](\Runtime\Data\Observation.cs) in the package and defined systems
+For more information, please refer to the [code summaries](Runtime/Data/Observation.cs) in the package and defined systems
 in the sample
 
 ### Actions:
