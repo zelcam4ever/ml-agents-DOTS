@@ -12,6 +12,7 @@ namespace Zelcam4.MLAgents
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<AcademyTraining>();
+            state.RequireForUpdate<Connected>();
         }
 
         public void OnUpdate(ref SystemState state)

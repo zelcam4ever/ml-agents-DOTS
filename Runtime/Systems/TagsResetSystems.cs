@@ -9,6 +9,11 @@ namespace Zelcam4.MLAgents
     [UpdateInGroup(typeof(TagResetGroup))]
     public partial struct EpisodeCompletedResetSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<Connected>();
+        }
+        
         public void OnUpdate(ref SystemState state)
         {
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()

@@ -10,6 +10,12 @@ namespace Zelcam4.MLAgents
     [UpdateInGroup(typeof(PreAgentResetSystemGroup))]
     public partial class AgentOnCompletedEpidoseObservationSystem : SystemBase
     {
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+            RequireForUpdate<Connected>();
+        }
+
         protected override void OnUpdate()
         {
             foreach (var (agent, policy, observations) in

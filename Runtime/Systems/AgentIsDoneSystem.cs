@@ -8,6 +8,11 @@ namespace Zelcam4.MLAgents
     [UpdateAfter(typeof(EpisodeCompletedGroup))]
     public partial struct AgentIsDoneSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<Connected>();
+        }
+        
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {

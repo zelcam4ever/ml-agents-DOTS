@@ -8,6 +8,11 @@ namespace Zelcam4.MLAgents
     [UpdateAfter(typeof(PreAgentResetSystemGroup))]
     public partial struct AgentResetSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<Connected>();
+        }
+        
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {

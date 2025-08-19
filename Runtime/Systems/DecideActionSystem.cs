@@ -8,6 +8,12 @@ namespace Zelcam4.MLAgents
     public partial class DecideActionSystem : SystemBase
     {
         private AgentAction _jobDataCache = new AgentAction();
+        
+        protected override void OnCreate()
+        {
+            RequireForUpdate<Connected>();
+        }
+        
         protected override void OnUpdate()
         {
             var uniqueBrainNames = new NativeHashSet<FixedString32Bytes>(16, Allocator.Temp);

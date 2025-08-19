@@ -7,6 +7,12 @@ namespace Zelcam4.MLAgents
     [UpdateAfter(typeof(ObservationCollectionGroup))]
     public partial class ExternalCommunicatorSystem : SystemBase
     {
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+            RequireForUpdate<Connected>();
+        }
+
         protected override void OnUpdate()
         {
             

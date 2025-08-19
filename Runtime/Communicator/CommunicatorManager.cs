@@ -74,13 +74,44 @@ public static class CommunicatorManager
             m_Initialized = true;
         }
     }
+    static int ReadPortFromArgs()
+    {
+        var args = Environment.GetCommandLineArgs();
+        var inputPort = "";
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i] == k_PortCommandLineFlag)
+            {
+                inputPort = args[i + 1];
+            }
+        }
+
+        try
+        {
+            return int.Parse(inputPort);
+        }
+        catch
+        {
+            // No arg passed, or malformed port number.
+#if UNITY_EDITOR
+            // Try connecting on the default editor port
+            //return MLAgentsSettingsManager.Settings.ConnectTrainer ? MLAgentsSettingsManager.Settings.EditorPort : -1;
+            return k_EditorTrainingPort;
+#else
+                // This is an executable, so we don't try to connect.
+            return -1;
+#endif
+        }
+    }
+    
     /// <summary>
     /// Initializes the environment, configures it and initializes the Academy.
     /// </summary>
     static void InitializingAcademy()
     {
         //var port = ReadPortFromArgs();
-        var port = 5004;
+        //var port = 5004;
+        var port = ReadPortFromArgs();
         if (port > 0)
         {
             Communicator = CommunicatorFactory.Create();

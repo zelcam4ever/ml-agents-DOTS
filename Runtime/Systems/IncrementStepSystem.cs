@@ -9,6 +9,11 @@ namespace Zelcam4.MLAgents
     [UpdateAfter(typeof(RequesterSystem))]
     public partial struct IncrementStepSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<Connected>();
+        }
+        
         public void OnUpdate(ref SystemState state)
         {
             GetSingletonRW<AcademyTraining>().ValueRW.StepCount+=1;

@@ -12,6 +12,12 @@ namespace Zelcam4.MLAgents
     [UpdateInGroup(typeof(EpisodeCompletedGroup))]
     public partial struct EpisodeMaxStepsSystem : ISystem
     {
+        
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<Connected>();
+        }
+        
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
