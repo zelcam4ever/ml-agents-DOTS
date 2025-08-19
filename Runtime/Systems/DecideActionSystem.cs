@@ -17,52 +17,58 @@ namespace Zelcam4.MLAgents
         protected override void OnUpdate()
         {
             var uniqueBrainNames = new NativeHashSet<FixedString32Bytes>(16, Allocator.Temp);
-            
-            // We search for the N brains once, and then we iterate over each one. Doing so we avoid doing string lookups for each agent
-            foreach (var (brain, agent) in 
-                     SystemAPI.Query<RefRO<BrainSimple>, RefRW<AgentEcs>>().WithAll<RequestDecisionTag>())
+        
+            try 
             {
-                uniqueBrainNames.Add(brain.ValueRO.FullyQualifiedBehaviorName.Value);
-            }
-
-            if (uniqueBrainNames.Count == 0) return;
-            
-            CommunicatorManager.DecideAction();
-            
-            foreach (var brainName in uniqueBrainNames)
-            {
-                // Expensive lookup that is performed once per brain, instead of once per agent
-                var actionsForThisBrain = CommunicatorManager.GetActionsForBrain(brainName);
-                if (actionsForThisBrain == null || actionsForThisBrain.Count == 0) continue;
-                
-                var nativeActions = new NativeHashMap<int, AgentAction>(
-                    actionsForThisBrain.Count,
-                    Allocator.TempJob
-                );
-
-                foreach (var (agentId, actionBuffer) in actionsForThisBrain)
+                foreach (var (brain, agent) in 
+                         SystemAPI.Query<RefRO<BrainSimple>, RefRW<AgentEcs>>().WithAll<RequestDecisionTag>())
                 {
-                    foreach (var val in actionBuffer.ContinuousActions) { _jobDataCache.ContinuousActions.Add(val); }
-                    foreach (var val in actionBuffer.DiscreteActions) { _jobDataCache.DiscreteActions.Add(val); }
-                    
-                    nativeActions.Add(agentId, _jobDataCache);
-                    _jobDataCache.ContinuousActions.Clear();
-                    _jobDataCache.DiscreteActions.Clear();
+                    uniqueBrainNames.Add(brain.ValueRO.FullyQualifiedBehaviorName.Value);
                 }
-                
-                var job = new DistributeActionsJob
+
+                if (uniqueBrainNames.Count == 0) return;
+            
+                CommunicatorManager.DecideAction();
+            
+                foreach (var brainName in uniqueBrainNames)
                 {
-                    ActionsToDistribute = nativeActions
-                };
+                    var actionsForThisBrain = CommunicatorManager.GetActionsForBrain(brainName);
+                    if (actionsForThisBrain == null || actionsForThisBrain.Count == 0) continue;
                 
-                var brainFilter = new BrainSimple { FullyQualifiedBehaviorName = brainName };
+                    // This NativeHashMap is correctly disposed with the job chain.
+                    var nativeActions = new NativeHashMap<int, AgentAction>(
+                        actionsForThisBrain.Count,
+                        Allocator.TempJob
+                    );
+
+                    foreach (var (agentId, actionBuffer) in actionsForThisBrain)
+                    {
+                        foreach (var val in actionBuffer.ContinuousActions) { _jobDataCache.ContinuousActions.Add(val); }
+                        foreach (var val in actionBuffer.DiscreteActions) { _jobDataCache.DiscreteActions.Add(val); }
+                    
+                        nativeActions.Add(agentId, _jobDataCache);
+                        _jobDataCache.ContinuousActions.Clear();
+                        _jobDataCache.DiscreteActions.Clear();
+                    }
                 
-                // Chain the disposal of the nativeActions to the job's dependency handle
-                Dependency = nativeActions.Dispose(job.ScheduleParallel(
-                    GetEntityQuery(typeof(AgentEcs),
-                        ComponentType.ReadWrite<AgentAction>(),
-                        ComponentType.ReadOnly(brainFilter.GetType())),
+                    var job = new DistributeActionsJob
+                    {
+                        ActionsToDistribute = nativeActions
+                    };
+                
+                    var brainFilter = new BrainSimple { FullyQualifiedBehaviorName = brainName };
+
+                    // Chain the disposal of the nativeActions to the job's dependency handle
+                    Dependency = nativeActions.Dispose(job.ScheduleParallel(
+                        GetEntityQuery(typeof(AgentEcs),
+                            ComponentType.ReadWrite<AgentAction>(),
+                            ComponentType.ReadOnly(brainFilter.GetType())),
                         Dependency));
+                }
+            }
+            finally
+            {
+                uniqueBrainNames.Dispose();
             }
         }
     }
