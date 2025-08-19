@@ -24,6 +24,10 @@ namespace Zelcam4.MLAgents.CommunicatorObjects
     /// Responsible for communication with External using gRPC.
     public class RpcCommunicator : ICommunicator
     {
+        private AgentInfoProto m_ReusableAgentInfoProto = new AgentInfoProto();
+        private ObservationProto m_ReusableObsProto = new ObservationProto();
+
+        
         public event QuitCommandHandler QuitCommandReceived;
         public event ResetCommandHandler ResetCommandReceived;
 
@@ -331,14 +335,16 @@ namespace Zelcam4.MLAgents.CommunicatorObjects
         {
             using (TimerStack.Instance.Scoped("AgentInfo.ToProto"))
             {
-                var agentInfoProto = info.ToAgentInfoProto();
+                // Fill our reusable proto objects (this is good, no garbage)
+                info.ToAgentInfoProto(ref m_ReusableAgentInfoProto);
+                observations.ToObservationProto(ref m_ReusableObsProto);
 
-                using (TimerStack.Instance.Scoped("GenerateSensorData"))
-                {
-                    var obsProto = observations.GetObservationProto();
-                    agentInfoProto.Observations.Add(obsProto);
-                }
-                m_CurrentUnityRlOutput.AgentInfos[behaviorName].Value.Add(agentInfoProto);
+                m_ReusableAgentInfoProto.Observations.Clear();
+                m_ReusableAgentInfoProto.Observations.Add(m_ReusableObsProto);
+        
+                // THE FIX: Add a CLONE of the reusable proto to the list.
+                // This creates a new, unique instance with the correct data for this agent.
+                m_CurrentUnityRlOutput.AgentInfos[behaviorName].Value.Add(m_ReusableAgentInfoProto.Clone());
             }
 
             m_NeedCommunicateThisStep = true;

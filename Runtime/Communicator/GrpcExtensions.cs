@@ -1,6 +1,3 @@
-
-using System.Collections.Generic;
-using System.Linq;
 using Zelcam4.MLAgents.CommunicatorObjects;
 using System.Runtime.CompilerServices;
 using Unity.Entities;
@@ -16,19 +13,15 @@ namespace Zelcam4.MLAgents
     {
         #region AgentEcs
         
-        public static AgentInfoProto ToAgentInfoProto(this AgentEcs ai)
+        public static void ToAgentInfoProto(this AgentEcs ai, ref AgentInfoProto protoToFill)
         {
-            var agentInfoProto = new AgentInfoProto
-            {
-                Reward = ai.Reward,
-                GroupReward = ai.GroupReward,
-                MaxStepReached = ai.MaxStepReached,
-                Done = ai.Done,
-                Id = ai.EpisodeId,
-                GroupId = ai.GroupId,
-            };
-
-            return agentInfoProto;
+            // No "new" here. Just set the fields on the object that was passed in.
+            protoToFill.Reward = ai.Reward;
+            protoToFill.GroupReward = ai.GroupReward;
+            protoToFill.MaxStepReached = ai.MaxStepReached;
+            protoToFill.Done = ai.Done;
+            protoToFill.Id = ai.EpisodeId;
+            protoToFill.GroupId = ai.GroupId;
         }
 
         #endregion
@@ -90,6 +83,7 @@ namespace Zelcam4.MLAgents
             {
                 actionSpecProto.DiscreteBranchSizes.Add(t);
             }
+            
             return actionSpecProto;
         }
 
@@ -178,6 +172,33 @@ namespace Zelcam4.MLAgents
             observationProto.Shape.Add(observations.Length);
 
             return observationProto;
+        }
+        
+        const string name = "VectorSensor_DOTS";
+        public static void ToObservationProto(this DynamicBuffer<ObservationValue> observations, ref ObservationProto protoToFill)
+        {
+
+            // Clear and reuse the internal data lists.
+            protoToFill.FloatData ??= new ObservationProto.Types.FloatData
+            {
+                Data =
+                {
+                    Capacity = observations.Length
+                }
+            };
+            protoToFill.FloatData.Data.Clear();
+            protoToFill.Shape.Clear();
+            //protoToFill.Observations.Clear(); // Assuming AgentInfoProto.Observations is a list
+
+            foreach (var obsValue in observations)
+            {
+                protoToFill.FloatData.Data.Add(obsValue.Value);
+            }
+
+            protoToFill.Name = name;
+            protoToFill.ObservationType = ObservationTypeProto.Default;
+            protoToFill.CompressionType = CompressionTypeProto.None;
+            protoToFill.Shape.Add(observations.Length);
         }
 
         #endregion
